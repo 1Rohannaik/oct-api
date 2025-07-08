@@ -9,6 +9,7 @@ ENV PORT=10000
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
+    poppler-utils \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -22,7 +23,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# Copy application code
 COPY . .
 
 # Run the app using Uvicorn
