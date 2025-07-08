@@ -1,10 +1,7 @@
 services:
   - type: web
     name: oct-api
-    env: python
+    env: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
+    region: oregon
+
