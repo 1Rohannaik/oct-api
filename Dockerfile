@@ -1,30 +1,28 @@
+# Use a lightweight Python base image
 FROM python:3.10-slim
 
-# System deps
+# Prevent interactive prompts during install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Tesseract and dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     poppler-utils \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
+    libgl1 \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Env settings
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV PORT=10000
-
-# Set working dir
+# Set working directory
 WORKDIR /app
 
-# Copy and install deps
-COPY requirements.txt .
-RUN python -m pip install --upgrade pip
-RUN python -m pip install --no-cache-dir -r requirements.txt
-
-# Copy rest of app
+# Copy all files into the container
 COPY . .
 
-# Start server
+# Install Python packages
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the app port
+EXPOSE 10000
+
+# Start FastAPI app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
