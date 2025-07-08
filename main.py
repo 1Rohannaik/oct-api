@@ -1,54 +1,29 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from pdf2image import convert_from_bytes
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import JSONResponse
+from PIL import Image
 import pytesseract
-from io import BytesIO
 import logging
+import io
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# Setup logging
 logging.basicConfig(level=logging.INFO)
-
+logger = logging.getLogger(__name__)
 
 @app.get("/")
-def health_check():
-    return {"message": "OCR API is running "}
-
+async def health_check():
+    return {"message": "OCR API is running"}
 
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
     try:
-        pdf_bytes = await file.read()
-
-        # Convert PDF to images
-        images = convert_from_bytes(pdf_bytes)
-        logging.info(f"Converted PDF to {len(images)} page(s)")
-
-        text = ""
-        for i, image in enumerate(images):
-            ocr_text = pytesseract.image_to_string(image)
-            logging.info(f"Page {i + 1} OCR length: {len(ocr_text)}")
-            text += ocr_text
-
-        if not text.strip():
-            raise ValueError("No text extracted from PDF.")
-
-        return {
-            "success": True,
-            "text": text.strip()
-        }
-
+        logger.info(f"Received file: {file.filename}")
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        text = pytesseract.image_to_string(image)
+        logger.info(f"Extracted text: {text[:100]}...")  # Log first 100 characters
+        return {"extracted_text": text}
     except Exception as e:
-        logging.error(f"OCR extraction failed: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"Error extracting text: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": "Failed to extract text"})
