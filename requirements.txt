@@ -1,5 +1,5 @@
 fastapi
 uvicorn
-pdf2image
 pytesseract
+pdf2image
 Pillow
