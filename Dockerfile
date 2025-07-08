@@ -1,27 +1,29 @@
+# Use a slim Python base image
 FROM python:3.10-slim
 
-# Prevent interactive prompts during install
-ENV DEBIAN_FRONTEND=noninteractive
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=10000
 
-# Install system dependencies for Tesseract and PDF conversion
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
-    poppler-utils \
-    libgl1 \
-    && apt-get clean \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Set work directory
 WORKDIR /app
 
-# Copy all files into container
-COPY . .
-
-# Install Python dependencies
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port
-EXPOSE 10000
+# Copy app code
+COPY . .
 
-# Run the app
+# Run the app using Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
